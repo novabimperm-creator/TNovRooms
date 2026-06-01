@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C6DF59B6-07A1-4B56-92A6-6D86CC7E67DE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TNovRooms</RootNamespace>
+    <AssemblyName>TNovRooms</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'R2022|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>\\fs-nova\Distr\0.For Admin\_TNov\build\2022\</OutputPath>
+    <DefineConstants>TRACE;R2022</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\TNov\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="RevitAPI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPIUI.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Aparts.cs" />
+    <Compile Include="ApartsNum.cs" />
+    <Compile Include="ApartsNumAtLevel.cs" />
+    <Compile Include="ApartsNumAtLevelViewModel.cs" />
+    <Compile Include="ApartsNumAtLevelWPF.xaml.cs">
+      <DependentUpon>ApartsNumAtLevelWPF.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ApartsNumViewModel.cs" />
+    <Compile Include="ApartsNumWPF.xaml.cs">
+      <DependentUpon>ApartsNumWPF.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Offices.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PurgeFailedRooms.cs" />
+    <Compile Include="RoomsBackup.cs" />
+    <Compile Include="roomsBackupAnalyse.xaml.cs">
+      <DependentUpon>roomsBackupAnalyse.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="roomsBackupLoad.xaml.cs">
+      <DependentUpon>roomsBackupLoad.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="roomsBackupSave.xaml.cs">
+      <DependentUpon>roomsBackupSave.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="roomsBackupStart.xaml.cs">
+      <DependentUpon>roomsBackupStart.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RoomsNum.cs" />
+    <Compile Include="RoomsNumViewModel.cs" />
+    <Compile Include="RoomsNumWPF.xaml.cs">
+      <DependentUpon>RoomsNumWPF.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RoomsRound.cs" />
+    <Compile Include="RoomsTNumber.cs" />
+    <Compile Include="RoomsViewModel.cs" />
+    <Compile Include="RoomsWPF.xaml.cs">
+      <DependentUpon>RoomsWPF.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TNovRoomUpdater.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ApartsNumAtLevelWPF.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ApartsNumWPF.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="roomsBackupAnalyse.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="roomsBackupLoad.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="roomsBackupSave.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="roomsBackupStart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="RoomsNumWPF.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="RoomsWPF.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TNovCommon\TNovCommon.csproj">
+      <Project>{214dc0ec-f948-4bc6-a123-d93abb39ac23}</Project>
+      <Name>TNovCommon</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>start /d "Z:\DEV\TNovDebug\bin\R2022\net9.0" TNovDebug.exe</PostBuildEvent>
+  </PropertyGroup>
+</Project>

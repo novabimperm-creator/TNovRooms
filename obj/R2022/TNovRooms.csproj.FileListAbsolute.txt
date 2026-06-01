@@ -1,0 +1,27 @@
+\\fs-nova\Distr\0.For Admin\_TNov\build\2022\TNovRooms.dll.config
+\\fs-nova\Distr\0.For Admin\_TNov\build\2022\TNovRooms.dll
+\\fs-nova\Distr\0.For Admin\_TNov\build\2022\TNovRooms.pdb
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.csproj.AssemblyReference.cache
+Z:\DEV\TNovRooms\obj\R2022\ApartsNumAtLevelWPF.g.cs
+Z:\DEV\TNovRooms\obj\R2022\ApartsNumWPF.g.cs
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupAnalyse.g.cs
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupLoad.g.cs
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupSave.g.cs
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupStart.g.cs
+Z:\DEV\TNovRooms\obj\R2022\RoomsNumWPF.g.cs
+Z:\DEV\TNovRooms\obj\R2022\RoomsWPF.g.cs
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms_MarkupCompile.cache
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms_MarkupCompile.lref
+Z:\DEV\TNovRooms\obj\R2022\ApartsNumAtLevelWPF.baml
+Z:\DEV\TNovRooms\obj\R2022\ApartsNumWPF.baml
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupAnalyse.baml
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupLoad.baml
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupSave.baml
+Z:\DEV\TNovRooms\obj\R2022\roomsBackupStart.baml
+Z:\DEV\TNovRooms\obj\R2022\RoomsNumWPF.baml
+Z:\DEV\TNovRooms\obj\R2022\RoomsWPF.baml
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.g.resources
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.csproj.CoreCompileInputs.cache
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.csproj.Up2Date
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.dll
+Z:\DEV\TNovRooms\obj\R2022\TNovRooms.pdb
