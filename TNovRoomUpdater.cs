@@ -187,6 +187,7 @@ namespace TNovRooms
             }
             else if (Nazn.Contains("Лестн")) TNazn = "Лестница";
             else if (Nazn.Contains("Кладов")) TNazn = "Кладовые";
+            else if (Nazn.Contains("кладовых")) TNazn = "МОП";
             else if (Nazn.Contains("Встроен")) TNazn = "МОП";
             else if (Nazn.Contains("Парк")) TNazn = "МОП";
             else if (Nazn.Contains("МОП"))

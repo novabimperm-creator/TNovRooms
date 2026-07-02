@@ -155,7 +155,13 @@ namespace TNovRooms
                     try { 
                         foreach (var room in rooms)
                         {
-                            Logger.Log("Помещение " +room.Id.IntegerValue.ToString(),2);
+#if R2022
+                    long idint =  room.Id.IntegerValue;
+#else
+                            long idint = room.Id.Value;
+#endif
+
+                            Logger.Log("Помещение " + idint.ToString(),2);
                             //тип помещения
                             string roomType = "Прочие";
 
@@ -186,7 +192,7 @@ namespace TNovRooms
 
                             //запись в бэкап
                             string filePath = config.ServerPath + "roomsBackup/"+ date + "," + docName + "," + backupName + ".txt";
-                            File.AppendAllText(filePath, roomType + "|" + room.Id.IntegerValue.ToString() + "|" + roomSqStr + "|" + roomSqRStr+"\n");
+                            File.AppendAllText(filePath, roomType + "|" + idint.ToString() + "|" + roomSqStr + "|" + roomSqRStr+"\n");
                             Logger.Log("   записано в бэкап", 2);
 
                             //Прогресс-бар: +1
@@ -340,10 +346,15 @@ namespace TNovRooms
                             {
                                 foreach (var room in rooms)
                                 {
+#if R2022
+                    long idint =  room.Id.IntegerValue;
+#else
+                                    long idint = room.Id.Value;
+#endif
                                     //добавить квартирографию и офисографию
-                                    if (room.Id.IntegerValue.ToString() == tNovRoom.RoomId)
+                                    if (idint.ToString() == tNovRoom.RoomId)
                                     {
-                                        Logger.Log("Помещение " + room.Id.IntegerValue.ToString(), 2);
+                                        Logger.Log("Помещение " + idint.ToString(), 2);
                                         double sq = 0; Double.TryParse(tNovRoom.RoomBackupS, out sq);
                                         double sqk = 0; Double.TryParse(tNovRoom.RoomBackupSK, out sqk);
                                         if (sq > 0)
@@ -356,7 +367,7 @@ namespace TNovRooms
                                             }
                                             catch (Exception ex)
                                             {
-                                                Logger.Log("Помещение " + room.Id.IntegerValue.ToString() + " ошибка: " + ex.Message, 4);
+                                                Logger.Log("Помещение " + idint.ToString() + " ошибка: " + ex.Message, 4);
                                             }
                                         }
                                         break;

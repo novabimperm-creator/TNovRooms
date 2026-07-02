@@ -150,16 +150,21 @@ namespace TNovRooms
                             }
                             comments = nazn + " (№" + value + ")";
                         }
-                        try
-                        {
+#if R2022
+                    long idint =  elem.Id.IntegerValue;
+#else
+                            long idint = elem.Id.Value;
+#endif
+                            try
+                            {
                             if (comments.Length > 0)
                                 elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
                             elem.get_Parameter(paramTGuid).Set(value); //назначение целевого параметра
-                            Logger.Log("Помещение " + elem.Id.IntegerValue.ToString() + ": параметры заполнены",2);
+                            Logger.Log("Помещение " + idint.ToString() + ": параметры заполнены",2);
                         }
                         catch (Exception ex)
                         {
-                            Logger.Log("Помещение " + elem.Id.IntegerValue.ToString() + " ошибка: "+ex.Message,4);
+                            Logger.Log("Помещение " + idint.ToString() + " ошибка: "+ex.Message,4);
                         }
                     }
                 }
