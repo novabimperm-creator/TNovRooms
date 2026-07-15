@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using Autodesk.Revit.DB;
+using System.Windows.Input;
+using TNovCommon;
 
 namespace TNovRooms
 {
@@ -11,12 +12,14 @@ namespace TNovRooms
     public partial class roomsBackupLoad : Window
     {
         public string SelectedFilePath = "-";
-        public roomsBackupLoad(string[] filesFromPath,string modelName)
+
+        public roomsBackupLoad(string[] filesFromPath, string modelName)
         {
             InitializeComponent();
-            LoadFileList(filesFromPath,modelName);
+            LoadFileList(filesFromPath, modelName);
             this.SizeToContent = SizeToContent.Height;
         }
+
         private void LoadFileList(IEnumerable<string> filePaths, string modelName)
         {
             var fileItems = new List<FileItem>();
@@ -26,12 +29,12 @@ namespace TNovRooms
             }
             comboBox.ItemsSource = fileItems;
 
-            // Выбираем первый элемент по умолчанию
             if (comboBox.Items.Count > 0)
             {
                 comboBox.SelectedIndex = 0;
             }
         }
+
         private void openButton_Click(object sender, RoutedEventArgs e)
         {
             if (comboBox.SelectedItem is FileItem selectedFile)
@@ -40,29 +43,31 @@ namespace TNovRooms
                 DialogResult = true;
             }
             else DialogResult = false;
-            this.Close(); // закрытие окна
+            this.Close();
         }
-        
+
         private void escButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
-            this.Close(); // закрытие окна
+            this.Close();
         }
 
-        private void Border_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
-
+            if (e.ChangedButton == MouseButton.Left)
+                DragMove();
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
-            string commandText = @"https://portal.talan.group/knowledge/proektirovanie/pomeshcheniyarezervnoekopirovanieivosstanovlenie/";
+            string commandText = HelpLinks.GetHelpLink("Помещения Резервные копии");
             var proc = new System.Diagnostics.Process();
             proc.StartInfo.FileName = commandText;
             proc.StartInfo.UseShellExecute = true;
             proc.Start();
         }
     }
+
     // Вспомогательный класс для отображения имени файла
     public class FileItem
     {

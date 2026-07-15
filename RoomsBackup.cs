@@ -17,14 +17,14 @@ namespace TNovRooms
 {
     public class TNovRoom
     {
-        public string RoomCategory;
-        public int RoomGroupNumber;
-        public string RoomId;
-        public string RoomName;
-        public string RoomModelS;
-        public string RoomModelSK;
-        public string RoomBackupS;
-        public string RoomBackupSK;
+        public string RoomCategory { get; set; }
+        public int RoomGroupNumber { get; set; }
+        public string RoomId { get; set; }
+        public string RoomName { get; set; }
+        public string RoomModelS { get; set; }
+        public string RoomModelSK { get; set; }
+        public string RoomBackupS { get; set; }
+        public string RoomBackupSK { get; set; }
     }
     [Transaction(TransactionMode.Manual)]
     public class RoomsBackup : IExternalCommand
