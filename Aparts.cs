@@ -14,6 +14,7 @@ using System.Windows.Threading;
 using System.Threading;
 using Autodesk.Revit.UI.Selection;
 using TNovCommon;
+using TNovRooms.Manager;
 using System.Xml.Linq;
 
 namespace TNovRooms
@@ -74,23 +75,9 @@ namespace TNovRooms
 
 
             #region Параметры
-
-            Guid NRoomSqParamGuid = new Guid("4f890165-ec27-4a22-811a-07e010101ec5"); //N_Площадь.Округленная
-            Guid NRoomSqKParamGuid = new Guid("e6b18cda-4550-4531-afae-96a9035f7fca"); //N_Площадь.ОкруглСКоэффициентом
-            Guid NRoomIsApartParamGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735"); //N_Квартира
-            Guid NRoomApartNumberParamGuid = new Guid("2f2edd07-cd47-4e30-b091-c1ceb5e6ff63"); //N_Кв.Номер
-            Guid NRoomApartNumAtLevelParamGuid = new Guid("7cdb6adb-756e-4e5b-b4d0-5ccaf3cee047"); //N_Кв.НомерНаЭтаже
-            Guid NRoomApartLivingParamGuid = new Guid("4ec5dcb5-eb89-414f-8296-666e8ca6abcc");
-                if(OldTemplateProject(commandData)) 
-                    NRoomApartLivingParamGuid = new Guid("0ffffc62-53c8-4c8f-b435-ddb1777af6fb");//N_Кв.Комната.Жилая
-            Guid NRoomApartSqOParamGuid = new Guid("878f4b53-8dfa-4bdf-8f30-ddbf764d6bf4"); //N_Кв.Площадь.Общая
-            Guid NRoomApartSqOKParamGuid = new Guid("b7b357cd-9449-4bd0-aa6d-1af9c29ba5d3"); //N_Кв.Площадь.ОбщаяСКоэффициентом
-            Guid NRoomApartSqParamGuid = new Guid("05960e6f-00c1-47c9-ba37-0e9c9198ed8e"); //N_Кв.Площадь
-            Guid NRoomApartSqBParamGuid = new Guid("3f1b5a3f-496d-4d87-980d-81891c833f71"); //N_Кв.Площадь.Балконы
-            Guid NRoomApartSqBKParamGuid = new Guid("6adce072-d2ad-400a-9bab-8052d7eb09d0"); //N_Кв.Площадь.БалконыСКоэффициентом
-            Guid NRoomApartSqLivParamGuid = new Guid("a3cf3a19-5377-4bc0-9f85-c26e206fb64a"); //N_Кв.Площадь.Жилая
-            Guid NRoomApartNumberOfRoomsParamGuid = new Guid("188e3cb5-3003-4d13-89fb-a531173f212d"); //N_Кв.Комнаты.Количество
-            string NRoomApartRoomToSpec = "Поквартир.Сетка"; //Поквартир.Сетка
+            //GUID параметров и формулы расчёта лежат в TNovRooms.Manager:
+            //те же сервисы использует Менеджер помещений
+            Guid NRoomApartLivingParamGuid = ApartParams.GetLivingRoomGuid(commandData); //N_Кв.Комната.Жилая
             #endregion
 
             #region Сбор элементов
@@ -122,7 +109,7 @@ namespace TNovRooms
 
             foreach (Room room in rooms) //проверка наличия квартир
             {
-                if(room.get_Parameter(NRoomIsApartParamGuid)?.AsInteger()==1) arooms.Add(room);
+                if (ApartParams.IsApartmentRoom(room)) arooms.Add(room);
             }
 
             if (arooms==null || arooms.Count==0) //если нет квартир - прерываем процесс
@@ -165,11 +152,10 @@ namespace TNovRooms
 
             #region Финальный сбор элементов
 
-            string names1 = viewModel.k05; string names2 = viewModel.k03; bool recalc = viewModel.recalc;
+            bool recalc = viewModel.recalc;
 
-            //получаем имена помещений, удаляем возможные пробелы в начале и конце имен
-            string[] n1 = names1.Split(','); for (int i = 0; i < n1.Length; i++) { n1[i] = n1[i].Trim(); }
-            string[] n2 = names2.Split(','); for (int i = 0; i < n2.Length; i++) { n2[i] = n2[i].Trim(); }
+            RoomRoundingService rounding = new RoomRoundingService(viewModel.k05, viewModel.k03);
+            ApartCalculationService apartService = new ApartCalculationService(rounding, NRoomApartLivingParamGuid);
 
             List<Element> rooms1 = new List<Element>();
 
@@ -209,13 +195,12 @@ namespace TNovRooms
                 List<Room> newARooms = new List<Room>();
                 foreach (Room room in rooms1) //проверка что помещение принадлежит квартире
                 {
-                    if(room.get_Parameter(NRoomIsApartParamGuid)?.AsInteger()==1)
+                    if (ApartParams.IsApartmentRoom(room))
                     {
-                        string apartNum = room.get_Parameter(NRoomApartNumberParamGuid).AsValueString();
+                        string apartNum = ApartParams.GetNumber(room);
                         foreach (var aroom in arooms)
                         {
-                            string apartNum1 = aroom.get_Parameter(NRoomApartNumberParamGuid).AsValueString();
-                            if (apartNum1 == apartNum) newARooms.Add(aroom);
+                            if (ApartParams.GetNumber(aroom) == apartNum) newARooms.Add(aroom);
                         }
                         arooms = newARooms;
                     }
@@ -242,15 +227,10 @@ namespace TNovRooms
                     Logger.Log( "Открываем транзакцию 1 (округлятор)",1);
                     foreach (Room room in arooms) 
                     {
-                        double area = room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() * 0.3048 * 0.3048;
-                        double areaR = Math.Round(area, 1);
-                        string name = room.Name;
-                        double k = 1;
-                        foreach (string n in n1) { if (name.Contains(n)) { k = 0.5; } }
-                        foreach (string n in n2) { if (name.Contains(n)) { k = 0.3; } }
-                        double areaRK = Math.Round((areaR * k + 0.000001), 1);
-                        room.get_Parameter(NRoomSqParamGuid)?.Set(areaR);
-                        room.get_Parameter(NRoomSqKParamGuid)?.Set(areaRK);
+                        double areaR = RoomRoundingService.RoundArea(RoomParams.GetAreaM2(room));
+                        double areaRK = RoomRoundingService.RoundAreaWithCoefficient(areaR, rounding.GetCoefficient(room));
+                        room.get_Parameter(RoomParams.RoundedArea)?.Set(areaR);
+                        room.get_Parameter(RoomParams.RoundedAreaK)?.Set(areaRK);
                         Logger.Log( "   Помещение " + room.Id + " : успешно",2);
                     }
 
@@ -273,7 +253,7 @@ namespace TNovRooms
             
             foreach (Room aroom in arooms)
             {
-                string apart = aroom.get_Parameter(NRoomApartNumberParamGuid).AsValueString();
+                string apart = ApartParams.GetNumber(aroom);
                 if (apart == "") //если у некоторых помещений квартир не заполнен параметр N_Кв.Номер - прерываем процесс
                 {
                     new InfoWindow280("В проекте присутствуют помещения квартир с незаполненным параметром N_Кв.Номер. Запустите Нумератор квартир.").ShowDialog();
@@ -289,15 +269,10 @@ namespace TNovRooms
             #endregion
 
             #region Основной код
-            //Квартирография
-            var aroomssortbynum = from aroom in arooms //сортированный список помещений по номеру квартиры
-                              orderby aroom.get_Parameter(NRoomApartNumberParamGuid).AsValueString()
-                                select aroom;
+            //Квартирография. Группировка и расчёт - в общем сервисе
+            List<RoomGroup> aparts = ApartCalculationService.Group(arooms);
 
-            var aparts = from aroom in aroomssortbynum //список квартир
-                         group aroom by aroom.get_Parameter(NRoomApartNumberParamGuid).AsValueString();
-
-            int apartsCount = aparts.Count();
+            int apartsCount = aparts.Count;
 
             using (Transaction transaction2 = new Transaction(doc))
             {
@@ -317,152 +292,18 @@ namespace TNovRooms
                 this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.apartsProgressBar.TNov_ProgressBar.Maximum = (double)apartsCount));
                 this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.maxvalue.Text = apartsCount.ToString()));
 
-                foreach (var apart in aparts) //проходим по каждой квартире в списке квартир
+                foreach (RoomGroup apart in aparts) //проходим по каждой квартире в списке квартир
                 {
-                    Logger.Log("Квартира " + apart.First().get_Parameter(NRoomApartNumberParamGuid).AsValueString(), 2);
+                    Logger.Log("Квартира " + apart.Number, 2);
 
-                    double apsqo = 0; //объявляем переменную для заполнения значения параметра N_Кв.Площадь.Общая
-                    double apsqok = 0; //N_Кв.Площадь.ОбщаяСКоэффициентом
-                    double apsq = 0; //N_Кв.Площадь
-                    double apsqb = 0; //N_Кв.Площадь.Балконы
-                    double apsqbk = 0; //N_Кв.Площадь.БалконыСКоэффициентом
-                    double apsqliv = 0; //N_Кв.Площадь.Жилая
-                    int aprn = 0; //N_Кв.Комнаты.Количество
-                    int specCount = 0; //Поквартир.Сетка
-
-                    foreach (var aroom in apart) //проходим по каждой комнате в квартире
+                    foreach (Room aroom in apart.Rooms)
                     {
-                        double sqNonConvert = aroom.get_Parameter(NRoomSqParamGuid).AsDouble();
-                        double sq = aroom.get_Parameter(NRoomSqParamGuid).AsDouble() / 0.3048 / 0.3048; //объявляем переменную, получаем площадь каждого помещения в квартире
-                        Logger.Log("   Помещение " + aroom.Id.ToString() + " имя: " + aroom.Name + " площадь:" + sqNonConvert.ToString(), 2);
-
-                        string name = aroom.Name; 
-                        double sqsq = sq; double sqb = 0; double sqbk = 0; double sqliv = 0;
-
-                        apsqo = apsqo + sq; //добавляем значение площади помещения к общей площади квартиры
-
-                        double sqk = aroom.get_Parameter(NRoomSqKParamGuid).AsDouble() / 0.3048 / 0.3048; //получаем площадь с коэфф каждого помещения в квартире
-                        apsqok = apsqok + sqk; //общая с коэфф
-
-                        foreach (string n in n1) { if (name.Contains(n)) { sqsq = 0; break; } }
-                        foreach (string n in n2) { if (name.Contains(n)) { sqsq = 0; break; } }
-                        apsq = apsq + sqsq; //кв.площадь
-
-                        foreach (string n in n1) { if (name.Contains(n)) { sqb = sq; break; } }
-                        foreach (string n in n2) { if (name.Contains(n)) { sqb = sq; break; } }
-                        apsqb = apsqb + sqb; //балконы
-
-                        foreach (string n in n1) { if (name.Contains(n)) { sqbk = sqk; break; } }
-                        foreach (string n in n2) { if (name.Contains(n)) { sqbk = sqk; break; } }
-                        apsqbk = apsqbk + sqbk; //балк с коэфф
-
-                        int livingroom = aroom.get_Parameter(NRoomApartLivingParamGuid).AsInteger();
-                        if (livingroom == 1) 
-                        { 
-                            sqliv = sq;
-                            aprn++; //кол-во комнат
-                        }
-                        apsqliv = apsqliv + sqliv; //жилая
+                        Logger.Log("   Помещение " + aroom.Id.ToString() + " имя: " + aroom.Name
+                                   + " площадь:" + RoomParams.GetRoundedArea(aroom).ToString(), 2);
                     }
 
-                    //N_Кв.Площадь.Общая
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqOParamGuid).Set(apsqo);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь.Общая ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Площадь.ОбщаяСКоэффициентом
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqOKParamGuid).Set(apsqok);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь.ОбщаяСКоэффициентом ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Площадь
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqParamGuid).Set(apsq);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Площадь.Балконы
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqBParamGuid).Set(apsqb);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь.Балконы ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Площадь.БалконыСКоэффициентом
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqBKParamGuid).Set(apsqbk);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь.БалконыСКоэффициентом ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Площадь.Жилая
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartSqLivParamGuid).Set(apsqliv);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Площадь.Жилая ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //N_Кв.Комнаты.Количество
-                    foreach (var aroom in apart)
-                    {
-                        try
-                        {
-                            aroom.get_Parameter(NRoomApartNumberOfRoomsParamGuid).Set(aprn.ToString());
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + aroom.Id.ToString() + " Параметр N_Кв.Комнаты.Количество ошибка: " + ex.Message, 4);
-                        }
-                    }
-
-                    //Поквартир.Сетка
-                    foreach (var aroom in apart)
-                    {
-                        if (specCount == 0) aroom.LookupParameter(NRoomApartRoomToSpec).Set(1); //назначаем Поквартир.Сетка только первому помещению в кв
-                        else aroom.LookupParameter(NRoomApartRoomToSpec).Set(0);
-                        specCount++;
-                    }
+                    //расчёт и запись всех параметров квартиры, включая Поквартир.Сетка
+                    apartService.Apply(apart.Rooms, apartService.Calculate(apart.Rooms));
 
                     //Прогресс-бар: +1
                     PBCount++;

@@ -15,6 +15,7 @@ using System.Threading;
 using System.Windows.Input;
 using Autodesk.Revit.UI.Selection;
 using TNovCommon;
+using TNovRooms.Manager;
 
 namespace TNovRooms
 {
@@ -72,14 +73,8 @@ namespace TNovRooms
             }
             #endregion
 
-            #region Параметры
-            Guid NRoomSqParamGuid = new Guid("4f890165-ec27-4a22-811a-07e010101ec5"); //N_Площадь.Округленная
-            Guid NRoomSqKParamGuid = new Guid("e6b18cda-4550-4531-afae-96a9035f7fca"); //N_Площадь.ОкруглСКоэффициентом
-            Guid NRoomOfficeNumber = new Guid("e73bb005-9ad8-489c-bc1f-fd8c3b521ec3"); //N_Офис.Номер
-            Guid NRoomOfficeSqO = new Guid("835dbef4-b314-4a24-9c12-814abcf6b66f"); //N_Офис.Площадь.Общая
-            Guid NRoomOfficeSqP = new Guid("8afe9673-011e-49d5-a8a4-57fc14cc3b1d");// //N_Офис.Площадь.Полезная
-            Guid NRoomOfficeSqR = new Guid("72d42023-d485-49e3-8b7d-2ddda6791f28");// //N_Офис.Площадь.Расчетная
-            #endregion
+            //GUID параметров и формулы расчёта лежат в TNovRooms.Manager:
+            //те же сервисы использует Менеджер помещений
 
             #region Сбор элементов
             Logger.Log("Сбор элементов",1);
@@ -115,13 +110,7 @@ namespace TNovRooms
             
             foreach (Room room in rooms) //проверка наличия офисов
             {
-                Parameter offnumParam = room.get_Parameter(NRoomOfficeNumber);
-                if (offnumParam!=null&&offnumParam.HasValue)
-                {
-                    string offNumValue = offnumParam.AsString();
-                    bool isOffice = Double.TryParse(offNumValue, out double num);
-                    if (isOffice || offnumParam.AsString().Length > 0) { officescount++; orooms.Add(room); }
-                }  
+                if (OfficeParams.IsOfficeRoom(room)) { officescount++; orooms.Add(room); }
             }
             
             if (officescount == 0) //если нет офисов - прерываем процесс
@@ -161,14 +150,10 @@ namespace TNovRooms
             }
             catch (Exception ex) { Logger.Log("Ошибка при сериализации: " + ex.Message,4); }
 
-            string names1 = viewModel.names1; string names2 = viewModel.names2;
-            string names3 = viewModel.k05; string names4 = viewModel.k03; bool recalc = viewModel.recalc;
+            bool recalc = viewModel.recalc;
 
-            //получаем имена помещений, удаляем возможные пробелы в начале и конце имен
-            string[] n1 = names1.Split(','); for (int i = 0; i < n1.Length; i++) { n1[i] = n1[i].Trim(); }
-            string[] n2 = names2.Split(','); for (int i = 0; i < n2.Length; i++) { n2[i] = n2[i].Trim(); }
-            string[] n3 = names3.Split(','); for (int i = 0; i < n3.Length; i++) { n3[i] = n3[i].Trim(); }
-            string[] n4 = names4.Split(','); for (int i = 0; i < n4.Length; i++) { n4[i] = n4[i].Trim(); }
+            RoomRoundingService rounding = new RoomRoundingService(viewModel.k05, viewModel.k03);
+            OfficeCalculationService officeService = new OfficeCalculationService(viewModel.names1, viewModel.names2);
 
             #endregion
 
@@ -212,23 +197,12 @@ namespace TNovRooms
                 List<Room> newORooms = new List<Room>();
                 foreach (Room room in rooms1) //проверка что помещение принадлежит офису
                 {
-                    bool isOfficeRoom = false;
-
-                    Parameter offnumParam = room.get_Parameter(NRoomOfficeNumber);
-                    if (offnumParam != null && offnumParam.HasValue)
+                    if (OfficeParams.IsOfficeRoom(room))
                     {
-                        string offNumValue = offnumParam.AsString();
-                        bool isOffice = Double.TryParse(offNumValue, out double num);
-                        if (isOffice || offnumParam.AsString().Length > 0) isOfficeRoom = true;
-                    }
-
-                    if (isOfficeRoom)
-                    {
-                        string officeNum = room.get_Parameter(NRoomOfficeNumber).AsValueString();
+                        string officeNum = OfficeParams.GetNumber(room);
                         foreach (var oroom in orooms)
                         {
-                            string officeNum1 = oroom.get_Parameter(NRoomOfficeNumber).AsValueString();
-                            if (officeNum1 == officeNum)
+                            if (OfficeParams.GetNumber(oroom) == officeNum)
                             {
                                 newORooms.Add(oroom);
                                 Logger.Log("   Помещение " + oroom.Id + " добавлено в список на обработку", 2);
@@ -259,15 +233,10 @@ namespace TNovRooms
                         Logger.Log("Открываем транзакцию 1 (округлятор)",1);
                         foreach (Room room in orooms) 
                         {
-                            double area = room.get_Parameter(BuiltInParameter.ROOM_AREA).AsDouble() * 0.3048 * 0.3048;
-                            double areaR = Math.Round(area, 1);
-                            string name = room.Name;
-                            double k = 1;
-                            foreach (string n in n3) { if (name.Contains(n)) { k = 0.5; } }
-                            foreach (string n in n4) { if (name.Contains(n)) { k = 0.3; } }
-                            double areaRK = Math.Round((areaR * k + 0.000001), 1);
-                            room.get_Parameter(NRoomSqParamGuid)?.Set(areaR);
-                            room.get_Parameter(NRoomSqKParamGuid)?.Set(areaRK);
+                            double areaR = RoomRoundingService.RoundArea(RoomParams.GetAreaM2(room));
+                            double areaRK = RoomRoundingService.RoundAreaWithCoefficient(areaR, rounding.GetCoefficient(room));
+                            room.get_Parameter(RoomParams.RoundedArea)?.Set(areaR);
+                            room.get_Parameter(RoomParams.RoundedAreaK)?.Set(areaRK);
                             Logger.Log("   Помещение " + room.Id + " : успешно",2);
                         }
 
@@ -286,14 +255,10 @@ namespace TNovRooms
             #region Основной код
             //Офисография
 
-            var oroomssortbynum = from oroom in orooms //сортированный список помещений по номеру офиса
-                              orderby oroom.get_Parameter(NRoomOfficeNumber).AsValueString()
-                                select oroom;
+            //Группировка и расчёт - в общем сервисе
+            List<RoomGroup> offices = OfficeCalculationService.Group(orooms);
 
-            var offices = from oroom in oroomssortbynum //список офисов
-                         group oroom by oroom.get_Parameter(NRoomOfficeNumber).AsValueString();
-
-            int officesCount = offices.Count();
+            int officesCount = offices.Count;
 
             using (Transaction transaction2 = new Transaction(doc))
             {
@@ -314,65 +279,19 @@ namespace TNovRooms
                 this.officesProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.officesProgressBar.TNov_ProgressBar.Maximum = (double)officesCount));
                 this.officesProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.officesProgressBar.maxvalue.Text = officesCount.ToString()));
 
-                foreach (var office in offices) //проходим по каждому офису в списке офисов
+                foreach (RoomGroup office in offices) //проходим по каждому офису в списке офисов
                 {
-                    Logger.Log("Офис "+office.First().get_Parameter(NRoomOfficeNumber).AsValueString(),2);
-                    
-                    double offsqo = 0; //объявляем переменную для заполнения значения параметра N_Офис.Площадь.Общая
-                    double offsqp = 0; //N_Офис.Площадь.Полезная
-                    double offsqr = 0; //N_Офис.Площадь.Расчетная
-                    foreach (var oroom in office) //проходим по каждой комнате в офисе
-                    {
-                        double sqNonConvert = oroom.get_Parameter(NRoomSqParamGuid).AsDouble();
-                        double sq = oroom.get_Parameter(NRoomSqParamGuid).AsDouble() / 0.3048 / 0.3048; //объявляем переменную, получаем площадь каждого помещения в офисе
-                        Logger.Log("   Помещение " + oroom.Id.ToString()+" имя: "+oroom.Name+" площадь:"+ sqNonConvert.ToString(), 2);
-                        
-                        offsqo += sq; //добавляем значение площади помещения к общей площади офиса
+                    Logger.Log("Офис " + office.Number, 2);
 
-                        double sqp = sq; double sqr = sq; string name = oroom.Name;
+                    foreach (Room oroom in office.Rooms)
+                    {
+                        Logger.Log("   Помещение " + oroom.Id.ToString() + " имя: " + oroom.Name
+                                   + " площадь:" + RoomParams.GetRoundedArea(oroom).ToString(), 2);
+                    }
 
-                        foreach (string n in n1) { if (name.Contains(n)) { sqp = 0; sqr = 0; break; } }
-                        offsqp += sqp; //полезная
- 
-                        foreach (string n in n2) { if (name.Contains(n)) { sqr = 0; break; } }
-                        offsqr += sqr; //расчетная
-                    }
-                    //Общая площадь
-                    foreach (var oroom in office) //проходим по каждой комнате в офисе
-                    {
-                        try
-                        {
-                            oroom.get_Parameter(NRoomOfficeSqO).Set(offsqo); //назначаем параметр каждому помещению в офисе
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Общая ошибка: " + ex.Message,4);
-                        }
-                    }
-                    //Полезная площадь
-                    foreach (var oroom in office) 
-                    {
-                        try
-                        {
-                            oroom.get_Parameter(NRoomOfficeSqP).Set(offsqp); 
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Полезная ошибка: " + ex.Message, 4);
-                        }
-                    }
-                    //Расчетная площадь
-                    foreach (var oroom in office)
-                    {
-                        try
-                        {
-                            oroom.get_Parameter(NRoomOfficeSqR).Set(offsqr);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Log("   Комната " + oroom.Id.ToString() + " Параметр N_Офис.Площадь.Расчетная ошибка: " + ex.Message, 4);
-                        }
-                    }
+                    //расчёт и запись общей, полезной и расчетной площади офиса
+                    officeService.Apply(office.Rooms, officeService.Calculate(office.Rooms));
+
                     //Прогресс-бар: +1
                     PBCount++;
                     this.officesProgressBar.TNov_ProgressBar.Dispatcher.Invoke<double>((Func<double>)(() => this.officesProgressBar.TNov_ProgressBar.Value = (double)PBCount));

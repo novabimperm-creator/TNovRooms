@@ -2,6 +2,12 @@
 
 FZ:\DEV\TNovRooms\ApartsNumAtLevelWPF.xaml;;
 FZ:\DEV\TNovRooms\ApartsNumWPF.xaml;;
+FZ:\DEV\TNovRooms\Manager\ApartsControl.xaml;;
+FZ:\DEV\TNovRooms\Manager\GateControl.xaml;;
+FZ:\DEV\TNovRooms\Manager\OfficesControl.xaml;;
+FZ:\DEV\TNovRooms\Manager\RoomsManagerWindow.xaml;;
+FZ:\DEV\TNovRooms\Manager\RoundingControl.xaml;;
+FZ:\DEV\TNovRooms\Manager\StoragesControl.xaml;;
 FZ:\DEV\TNovRooms\roomsBackupAnalyse.xaml;;
 FZ:\DEV\TNovRooms\roomsBackupLoad.xaml;;
 FZ:\DEV\TNovRooms\roomsBackupSave.xaml;;

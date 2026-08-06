@@ -48,3 +48,17 @@ Z:\DEV\_build\TNovRooms\runtimes\win-x64\native\WebView2Loader.dll
 Z:\DEV\_build\TNovRooms\System.Resources.Extensions.dll
 Z:\DEV\_build\TNovRooms\TNovRooms.dll
 Z:\DEV\_build\TNovRooms\TNovRooms.pdb
+Z:\DEV\TNovRooms\obj\R2022\Manager\PlaceholderControl.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\GateControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\PlaceholderControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\RoomsManagerWindow.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\RoundingControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\GateControl.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\RoomsManagerWindow.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\RoundingControl.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\ApartsControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\ApartsControl.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\OfficesControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\OfficesControl.baml
+Z:\DEV\TNovRooms\obj\R2022\Manager\StoragesControl.g.cs
+Z:\DEV\TNovRooms\obj\R2022\Manager\StoragesControl.baml

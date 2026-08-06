@@ -252,9 +252,11 @@ namespace TNovRooms
                     #region Загрузка. Заполнение списков
                     List<TNovRoom> tNovRooms = new List<TNovRoom>();
                     string[] lines = File.ReadAllLines(wpfview2.SelectedFilePath);
-                    for (int i = 0; i < lines.Length - 1; i++)
+                    for (int i = 0; i < lines.Length; i++)
                     {
+                        if (string.IsNullOrWhiteSpace(lines[i])) continue;
                         string[] parts = lines[i].Split('|');
+                        if (parts.Length < 4) continue;
                         int id = 0;
                         int.TryParse(parts[1], out id);
                         if (id == 0) continue;

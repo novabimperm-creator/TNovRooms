@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 using System.Threading;
 using TNovCommon;
+using TNovRooms.Manager;
 using Newtonsoft.Json;
 
 namespace TNovRooms
@@ -68,13 +69,6 @@ namespace TNovRooms
             #endregion
 
 
-            #region Параметры
-            Guid NLevelNumberParamGuid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11"); //N_Эт.Номер
-            Guid NRoomIsApartParamGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735"); //N_Квартира
-            Guid NRoomApartNumberParamGuid = new Guid("2f2edd07-cd47-4e30-b091-c1ceb5e6ff63"); //N_Кв.Номер
-            Guid NRoomApartNumAtLevelParamGuid = new Guid("7cdb6adb-756e-4e5b-b4d0-5ccaf3cee047"); //N_Кв.НомерНаЭтаже
-            #endregion
-
             #region Сбор элементов
             Logger.Log( "Сбор элементов",1);
             List<Room> rooms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Rooms)   //фильтр по категории Помещения
@@ -82,22 +76,7 @@ namespace TNovRooms
                                                                          .Cast<Room>()                     //элементы категории Помещения
                                                                          .ToList();                         //формируем список
 
-            List<Room> roomsA = new List<Room>(); //список помещений квартир
-
-            foreach (Room room in rooms) //заполнение списка помещений квартир
-            {
-                if (room.get_Parameter(NRoomIsApartParamGuid)?.AsInteger() == 1) roomsA.Add(room); 
-            }
-            
-            var roomsAF = from room in roomsA //сортировка квартир по Эт.Номеру и номеру на этаже
-                                      orderby (double)(room.get_Parameter(NLevelNumberParamGuid)?.AsDouble())*1000+ (int)(room.get_Parameter(NRoomApartNumAtLevelParamGuid)?.AsInteger())
-                                      select room;
-
-            var floors = from room in roomsAF //группирование по Эт.Номеру и номеру на этаже
-                         group room by ((double)(room.get_Parameter(NLevelNumberParamGuid)?.AsDouble()) * 0.3048 * 0.3048 * 1000 + (int)(room.get_Parameter(NRoomApartNumAtLevelParamGuid)?.AsInteger())).ToString();
-            
-            List<Room>roomsToSet = new List<Room>(); //итоговый список помещений
-            List<int>values = new List<int>(); //итоговый список значений параметра
+            List<Room> roomsA = rooms.Where(ApartParams.IsApartmentRoom).ToList(); //список помещений квартир
             #endregion
 
             int i1 = 1;
@@ -121,16 +100,11 @@ namespace TNovRooms
             #region Итоговые списки
             Logger.Log( "Заполняем итоговые списки",1);
 
-            foreach (var f in floors)
-            {
-                Logger.Log( "Этаж " +f.First().get_Parameter(NLevelNumberParamGuid)?.AsDouble().ToString(),2);
-                foreach (Room room in f)
-                {
-                    roomsToSet.Add(room); //заполняем итоговый список помещений
-                    values.Add(i1); //заполняем итоговый список значений параметра
-                }
-                i1++;
-            }
+            //порядок обхода задаёт общий сервис - он же используется в Менеджере помещений
+            ApartNumberingPlan plan = ApartNumberingService.Build(roomsA, i1);
+            List<Room> roomsToSet = plan.Rooms;
+            List<int> values = plan.Values;
+            Logger.Log("Квартир найдено: " + plan.ApartCount + ", номера с " + plan.FirstNumber + " по " + plan.LastNumber, 1);
             #endregion
 
             #region Основной код
@@ -156,7 +130,7 @@ namespace TNovRooms
                 {
                     try
                     {
-                        room.get_Parameter(NRoomApartNumberParamGuid)?.Set(values[i].ToString());
+                        room.get_Parameter(RoomParams.ApartmentNumber)?.Set(values[i].ToString());
                         i++;
                         PBCount++;
                         Logger.Log("   Помещение " + room.Id + " успешно", 2);
