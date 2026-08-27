@@ -1,2 +1,4 @@
 ﻿# MSBuild intermediate output
 obj/
+# Local build outputs
+bin/

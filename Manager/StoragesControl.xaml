@@ -1,0 +1,276 @@
+<UserControl x:Class="TNovRooms.Manager.StoragesControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:TNovRooms.Manager"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="960"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TNovCommon;component/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="WrapCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DarkDataGridTextElementStyle}">
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="VerticalAlignment" Value="Top"/>
+            </Style>
+
+            <Style x:Key="ErrorCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WrapCellTextStyle}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                        <Setter Property="Foreground" Value="#FF6B6B"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="NewNumberCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DarkDataGridTextElementStyle}">
+                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
+            <Style x:Key="DragRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource DarkDataGridRowStyle}">
+                <Setter Property="Cursor" Value="SizeNS"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="📦 Кладовые"
+                       Style="{StaticResource PanelHeaderStyle}"
+                       FontSize="16"
+                       HorizontalAlignment="Left"
+                       Margin="0,0,0,4"/>
+            <TextBlock Text="Показаны только помещения с именем «Кладовая», не входящие в квартиры и офисы. Порядок строк задаётся перетаскиванием и определяет будущие номера."
+                       Foreground="{StaticResource MutedBrush}"
+                       FontSize="12"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource ChangeCardStyle}" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="Первый номер:"
+                           Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"/>
+                <TextBox x:Name="TbFirstNumber"
+                         Grid.Column="1"
+                         Style="{StaticResource DarkCompactTextBoxStyle}"
+                         Width="70"
+                         Height="28"
+                         TextAlignment="Center"
+                         Margin="0,0,8,0"
+                         TextChanged="FirstNumber_TextChanged"/>
+                <CheckBox x:Name="ChkReround"
+                          Grid.Column="2"
+                          Content="Пересчитать площади"
+                          Style="{StaticResource DarkCheckBoxStyle}"
+                          VerticalAlignment="Center"
+                          Margin="4,0,12,0"/>
+
+                <ToggleButton x:Name="TglSettings"
+                              Grid.Column="4"
+                              Content="Настройки коэффициентов"
+                              Style="{StaticResource FilterToggleStyle}"
+                              Margin="0,0,8,0"
+                              Padding="10,6"
+                              Checked="Settings_Toggled"
+                              Unchecked="Settings_Toggled"/>
+                <Button x:Name="BtnRenumber"
+                        Grid.Column="5"
+                        Content="Перенумеровать"
+                        Style="{StaticResource RunButtonStyle}"
+                        Padding="18,6"
+                        Margin="0"
+                        MinWidth="140"
+                        Click="Renumber_Click"/>
+            </Grid>
+        </Border>
+
+        <Border x:Name="SettingsPanel"
+                Grid.Row="2"
+                Style="{StaticResource ChangeCardStyle}"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Text="Коэффициент 0.5, имена:"
+                           Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,6"/>
+                <TextBox Grid.Row="0" Grid.Column="1"
+                         Text="{Binding Settings.k05, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkCompactTextBoxStyle}"
+                         Height="28"
+                         Margin="0,0,8,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0"
+                           Text="Коэффициент 0.3, имена:"
+                           Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,6"/>
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Text="{Binding Settings.k03, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkCompactTextBoxStyle}"
+                         Height="28"
+                         Margin="0,0,8,6"/>
+
+                <Button Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                        Content="Применить"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Padding="14,6"
+                        VerticalAlignment="Top"
+                        Click="ApplySettings_Click"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                           Text="Коэффициенты нужны только галочке «Пересчитать площади». Настройки общие с Округлятором, Квартирографией и Офисографией."
+                           Style="{StaticResource CardSubtitleStyle}"
+                           TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,8,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Этаж:"
+                       Foreground="{StaticResource MutedBrush}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <ComboBox x:Name="CbLevelFilter"
+                      Grid.Column="1"
+                      Style="{StaticResource DarkComboBoxStyle}"
+                      Margin="0"
+                      Padding="10,6"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="LevelFilter_SelectionChanged"/>
+            <CheckBox x:Name="ChkErrorsOnly"
+                      Grid.Column="2"
+                      Content="Только с ошибками"
+                      Style="{StaticResource DarkCheckBoxStyle}"
+                      VerticalAlignment="Center"
+                      Margin="12,0,0,0"
+                      Checked="ErrorsOnly_Changed"
+                      Unchecked="ErrorsOnly_Changed"/>
+            <Button Grid.Column="4"
+                    Content="Сбросить порядок"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Padding="14,6"
+                    Margin="0,0,8,0"
+                    Click="ResetOrder_Click"/>
+            <Button Grid.Column="5"
+                    Content="Обновить"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Padding="14,6"
+                    Click="Reload_Click"/>
+        </Grid>
+
+        <Border Grid.Row="4" Style="{StaticResource ChangeCardStyle}" Margin="0,0,0,8">
+            <TextBlock x:Name="TbSummary"
+                       Foreground="White"
+                       FontSize="12"
+                       TextWrapping="Wrap"/>
+        </Border>
+
+        <DataGrid x:Name="LvStorages"
+                  Grid.Row="5"
+                  Style="{StaticResource DarkDataGridStyle}"
+                  ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                  CellStyle="{StaticResource DarkDataGridCellStyle}"
+                  RowStyle="{StaticResource DragRowStyle}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserSortColumns="False"
+                  CanUserReorderColumns="False"
+                  HeadersVisibility="Column"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  HorizontalScrollBarVisibility="Auto"
+                  AllowDrop="True"
+                  PreviewMouseLeftButtonDown="Grid_PreviewMouseLeftButtonDown"
+                  MouseMove="Grid_MouseMove"
+                  DragOver="Grid_DragOver"
+                  Drop="Grid_Drop">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Новый №" Binding="{Binding NewNumberText}" Width="80"
+                                    ElementStyle="{StaticResource NewNumberCellTextStyle}"/>
+                <DataGridTextColumn Header="Номер" Binding="{Binding Number}" Width="80"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Этаж" Binding="{Binding LevelText}" Width="60"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding IdText}" Width="75"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Площадь" Binding="{Binding AreaText}" Width="80"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Округл." Binding="{Binding RoundedAreaText}" Width="80"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="С коэфф." Binding="{Binding RoundedAreaKText}" Width="85"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Проверка" Binding="{Binding ErrorText}" Width="*" MinWidth="200"
+                                    ElementStyle="{StaticResource ErrorCellTextStyle}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="6" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Content="Ручной нумератор"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Padding="16,6"
+                    Click="ManualNumbering_Click"/>
+            <TextBlock Grid.Column="1"
+                       Text="Ручной нумератор заполняет «Номер» выбором помещений в модели. Менеджер закроется и откроется снова после нумерации."
+                       Style="{StaticResource CardSubtitleStyle}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"/>
+        </Grid>
+    </Grid>
+</UserControl>

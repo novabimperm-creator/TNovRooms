@@ -1,0 +1,168 @@
+<Window x:Class="TNovRooms.Manager.RoomsManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:TNovRooms.Manager"
+        mc:Ignorable="d"
+        MinHeight="620" Height="700"
+        MinWidth="1020" Width="1180"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStyle="None"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TNovCommon;component/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30"
+                      ResizeBorderThickness="5"
+                      GlassFrameThickness="0"
+                      CornerRadius="12"/>
+    </WindowChrome.WindowChrome>
+
+    <Border CornerRadius="12"
+            Background="{StaticResource BgBrush}"
+            BorderBrush="{StaticResource AccentBrush}"
+            BorderThickness="1">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    MouseDown="TitleBar_MouseDown"
+                    Background="Transparent"
+                    Cursor="Arrow"
+                    Margin="6,6,6,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="35"/>
+                        <ColumnDefinition Width="35"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="МЕНЕДЖЕР ПОМЕЩЕНИЙ"
+                               Grid.Column="0"
+                               Foreground="{StaticResource AccentBrush}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                    <Button Content="i"
+                            Grid.Column="1"
+                            Style="{StaticResource CloseButtonStyleMini}"
+                            Click="HelpButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    <Button Content="✕"
+                            Grid.Column="2"
+                            Style="{StaticResource CloseButtonStyleMini}"
+                            Click="CloseButton_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="205"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Style="{StaticResource PanelFrameStyle}"
+                        Margin="0,0,8,0"
+                        Padding="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0">
+                            <Button x:Name="BtnRounding"
+                                    Style="{StaticResource JournalNavButtonStyle}"
+                                    Click="BtnRounding_Click"
+                                    ToolTip="Округлятор площадей помещений">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🧮" FontSize="18" Width="28" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Округлятор" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnAparts"
+                                    Style="{StaticResource JournalNavButtonStyle}"
+                                    Click="BtnAparts_Click"
+                                    ToolTip="Квартирография">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🏠" FontSize="18" Width="28" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Квартирография" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnOffices"
+                                    Style="{StaticResource JournalNavButtonStyle}"
+                                    Click="BtnOffices_Click"
+                                    ToolTip="Офисография">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🏢" FontSize="18" Width="28" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Офисография" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnStorages"
+                                    Style="{StaticResource JournalNavButtonStyle}"
+                                    Click="BtnStorages_Click"
+                                    ToolTip="Кладовые">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📦" FontSize="18" Width="28" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Кладовые" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="BtnCoefficients"
+                                    Style="{StaticResource JournalNavButtonStyle}"
+                                    Click="BtnCoefficients_Click"
+                                    ToolTip="Коэффициенты">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚙" FontSize="18" Width="28" TextAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Коэффициенты" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1">
+                            <Border x:Name="NavLockedHint"
+                                    Background="{StaticResource CardBrush}"
+                                    BorderBrush="{StaticResource TreeToggleBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="8"
+                                    Margin="0,8,0,0">
+                                <TextBlock Text="Функции откроются после прохождения обязательных проверок"
+                                           Foreground="{StaticResource MutedBrush}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"/>
+                            </Border>
+                            <TextBlock x:Name="TbBackupInfo"
+                                       Foreground="{StaticResource MutedBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="4,10,4,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border x:Name="FunctionBorder"
+                        Grid.Column="1"
+                        Style="{StaticResource PanelFrameStyle}"
+                        Padding="0">
+                    <ContentControl x:Name="FunctionContent"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"/>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

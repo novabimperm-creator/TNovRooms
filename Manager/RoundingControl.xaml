@@ -1,0 +1,205 @@
+<UserControl x:Class="TNovRooms.Manager.RoundingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:TNovRooms.Manager"
+             mc:Ignorable="d"
+             d:DesignHeight="560" d:DesignWidth="960"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/TNovCommon;component/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="WrapCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DarkDataGridTextElementStyle}">
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="VerticalAlignment" Value="Top"/>
+            </Style>
+
+            <Style x:Key="ErrorCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WrapCellTextStyle}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasError}" Value="True">
+                        <Setter Property="Foreground" Value="#FF6B6B"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="BackupCellTextStyle" TargetType="TextBlock" BasedOn="{StaticResource WrapCellTextStyle}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding BackupDiffers}" Value="True">
+                        <Setter Property="Foreground" Value="#FFC857"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="🧮 Округлятор"
+                       Style="{StaticResource PanelHeaderStyle}"
+                       FontSize="16"
+                       HorizontalAlignment="Left"
+                       Margin="0,0,0,4"/>
+            <TextBlock Text="Пересчёт параметров N_Площадь.Округленная и N_Площадь.ОкруглСКоэффициентом с проверкой расхождений и сверкой с последним бэкапом."
+                       Foreground="{StaticResource MutedBrush}"
+                       FontSize="12"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Назначение:"
+                       Foreground="{StaticResource MutedBrush}"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+            <ComboBox x:Name="CbDepartmentFilter"
+                      Grid.Column="1"
+                      Style="{StaticResource DarkComboBoxStyle}"
+                      Margin="0"
+                      Padding="10,6"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="DepartmentFilter_SelectionChanged"/>
+
+            <ToggleButton x:Name="TglSettings"
+                          Grid.Column="3"
+                          Content="Настройки коэффициентов"
+                          Style="{StaticResource FilterToggleStyle}"
+                          Margin="8,0,8,0"
+                          Padding="10,6"
+                          Checked="Settings_Toggled"
+                          Unchecked="Settings_Toggled"/>
+            <Button Grid.Column="4"
+                    Content="Обновить"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Padding="14,6"
+                    Margin="0,0,8,0"
+                    Click="Reload_Click"/>
+            <Button Grid.Column="5"
+                    Content="Пересчитать"
+                    Style="{StaticResource RunButtonStyle}"
+                    Padding="18,6"
+                    Margin="0"
+                    MinWidth="130"
+                    Click="Recalculate_Click"/>
+        </Grid>
+
+        <Border x:Name="SettingsPanel"
+                Grid.Row="2"
+                Style="{StaticResource ChangeCardStyle}"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Text="Коэффициент 0.5, имена:"
+                           Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,6"/>
+                <TextBox Grid.Row="0" Grid.Column="1"
+                         Text="{Binding Settings.k05, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkCompactTextBoxStyle}"
+                         Height="28"
+                         Margin="0,0,8,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0"
+                           Text="Коэффициент 0.3, имена:"
+                           Foreground="{StaticResource MutedBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,6"/>
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Text="{Binding Settings.k03, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource DarkCompactTextBoxStyle}"
+                         Height="28"
+                         Margin="0,0,8,6"/>
+
+                <Button Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                        Content="Применить"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Padding="14,6"
+                        VerticalAlignment="Top"
+                        Click="ApplySettings_Click"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                           Text="Имена через запятую. Совпадение ищется как вхождение подстроки в имя помещения; список 0.3 имеет приоритет над 0.5. Настройки общие с Квартирографией и Офисографией."
+                           Style="{StaticResource CardSubtitleStyle}"
+                           TextWrapping="Wrap"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Style="{StaticResource ChangeCardStyle}" Margin="0,0,0,8">
+            <TextBlock x:Name="TbSummary"
+                       Foreground="White"
+                       FontSize="12"
+                       TextWrapping="Wrap"/>
+        </Border>
+
+        <DataGrid x:Name="LvRooms"
+                  Grid.Row="4"
+                  Style="{StaticResource DarkDataGridStyle}"
+                  ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeaderStyle}"
+                  CellStyle="{StaticResource DarkDataGridCellStyle}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  HorizontalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding IdText}" Width="70"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="№" Binding="{Binding Number}" Width="55"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*" MinWidth="110"
+                                    ElementStyle="{StaticResource WrapCellTextStyle}"/>
+                <DataGridTextColumn Header="Назначение" Binding="{Binding Department}" Width="110"
+                                    ElementStyle="{StaticResource WrapCellTextStyle}"/>
+                <DataGridTextColumn Header="Площадь" Binding="{Binding AreaText}" Width="70"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Округл." Binding="{Binding RoundedAreaText}" Width="70"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="С коэфф." Binding="{Binding RoundedAreaKText}" Width="75"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="k" Binding="{Binding CoefficientText}" Width="40"
+                                    ElementStyle="{StaticResource DarkDataGridTextElementStyle}"/>
+                <DataGridTextColumn Header="Проверка" Binding="{Binding ErrorText}" Width="175"
+                                    ElementStyle="{StaticResource ErrorCellTextStyle}"/>
+                <DataGridTextColumn Header="Последний бэкап" Binding="{Binding BackupText}" Width="135"
+                                    ElementStyle="{StaticResource BackupCellTextStyle}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
