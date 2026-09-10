@@ -364,7 +364,7 @@ namespace TNovRooms
             if (docName.Contains("-ЭЛ") || docName.Contains("_ЭЛ")) return true;
             if (docName.Contains("-ЭЭ") || docName.Contains("_ЭЭ")) return true;
             if (docName.Contains("-ЭС") || docName.Contains("_ЭС")) return true;
-            if (docName.Contains("-СС") || docName.Contains("_СС")) return true;
+            if (docName.Contains("-СС") || docName.Contains("_СС") || docName.Contains("-ПС") || docName.Contains("_ПС")) return true;
             if (docName.Contains("-ССВ") || docName.Contains("_ССВ")) return true;
             if (docName.Contains("-АПС") || docName.Contains("_АПС")) return true;
             if (docName.Contains("Задани") || docName.Contains("задани") || docName.Contains("-ЗД") || docName.Contains("_ЗД") || docName.Contains("ЗАДАНИЕ")) return true;
