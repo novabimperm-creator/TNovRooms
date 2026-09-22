@@ -17,6 +17,8 @@ namespace TNovRooms
     [Transaction(TransactionMode.Manual)]
     public class TNovRoomUpdater : IUpdater
     {
+        private const string UpdaterName = "TNovRoomUpdater";
+
         static AddInId _appId;
         static UpdaterId _updaterId;
 
@@ -27,8 +29,27 @@ namespace TNovRooms
             _updaterId = new UpdaterId(_appId, new Guid("898f186f-c08c-4bd9-a81b-01cc3fa96f0e"));
         }
 
+        /// <summary>
+        /// Точка входа Revit. Наружу не должно вылетать ни одного исключения:
+        /// любое исключение из IUpdater.Execute Revit показывает пользователю
+        /// с предложением отключить обновитель.
+        /// </summary>
         public void Execute(UpdaterData data)
         {
+            try
+            {
+                ExecuteCore(data);
+            }
+            catch (Exception ex)
+            {
+                UpdaterDiagnostics.Report(UpdaterName, "Execute", ex);
+            }
+        }
+
+        private void ExecuteCore(UpdaterData data)
+        {
+            if (data == null) return;
+
             Guid param1Guid = new Guid("51cf9b84-e3e6-4c52-b723-340669e3c500");//N_Секция
             Guid param2Guid = new Guid("4d2aa1b8-727c-43a1-8b1e-8c22dd484e11");//N_Эт.Номер
             Guid paramAGuid = new Guid("155f8c55-e05f-4737-883e-1338eb722735");//N_Квартира
@@ -40,21 +61,20 @@ namespace TNovRooms
             Guid TNaznParamGuid = new Guid("2a73f7b8-05e7-410a-b22a-66498e315df4"); //Т_Назначение
 
             Document doc = data.GetDocument();
-            Autodesk.Revit.ApplicationServices.Application app = doc.Application;
+            if (doc == null || doc.IsFamilyDocument) return;
 
             string prefix = "0";
-            string docName = doc.Title.ToString();
+            string docName = doc.Title ?? "";
             List<string> list = new List<string>() { "02-50ЛЕТ" , "16-НЧ", "ПОСЕЛК", "27-АВИА", "59-КОСМ1", "69-КРАС.3", "76-СУЗДАЛ.23", "76.23-18.03",
             "59-ППРК","27-ВРН-03","27-ЛАЗО-01","27-ХГ4"};
             foreach (string item in list) { if (docName.Contains(item)) { prefix = ""; break; } }
 
-            List<ElementId> idsA = data.GetAddedElementIds().ToList();
-            List<ElementId> idsB = data.GetModifiedElementIds().ToList();
-
-            List<ElementId> ids = new List<ElementId>();
-
-            foreach (var id in idsA) ids.Add(id);
-            foreach (var id in idsB) ids.Add(id);
+            var ids = new HashSet<ElementId>();
+            ICollection<ElementId> idsA = data.GetAddedElementIds();
+            if (idsA != null) ids.UnionWith(idsA);
+            ICollection<ElementId> idsB = data.GetModifiedElementIds();
+            if (idsB != null) ids.UnionWith(idsB);
+            if (ids.Count == 0) return;
 
             if (docName.Contains("-АР") || docName.Contains("_АР") || docName.Contains("-АР-") || docName.Contains("_ПОФ") || docName.Contains("-ПОФ-"))
             {
@@ -133,31 +153,21 @@ namespace TNovRooms
 
                             string comments = "";
                             Parameter roomNazn = elem.get_Parameter(BuiltInParameter.ROOM_DEPARTMENT);
-                            string roomNaznValue = "";
-                            if (roomNazn.HasValue) roomNaznValue = roomNazn.AsString();
+                            string roomNaznValue = UpdaterUtils.GetStringSafe(roomNazn);
                             if (scenario == 3 && roomNaznValue.Length > 0)
                             {
                                 comments = roomNaznValue + " (№" + value + ")";
                             }
-                            if (comments.Length > 0)
-                                elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(comments);//назначаем также параметр Комментарии для спецификации офисов
-                            
-                            if(Param.ParamExistByGuid(paramTGuid, elem)) elem.get_Parameter(paramTGuid).Set(value);
+                            if (comments.Length > 0)//назначаем также параметр Комментарии для спецификации офисов
+                                UpdaterUtils.TrySetString(elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS), comments);
 
+                            UpdaterUtils.TrySetString(UpdaterUtils.GetWritableParam(elem, paramTGuid), value);
 
-                            if (Param.ParamExistByGuid(NTParamsNotSetParamGuid, elem) && elem.get_Parameter(NTParamsNotSetParamGuid).AsDouble() == 1)
-                            { }
-                            else 
-                            { 
-                                string value1 = GetTNazn(roomNazn.AsString(), elem.get_Parameter(BuiltInParameter.ROOM_NAME).AsString());
-                                if (Param.ParamExistByGuid(TPolozhParamGuid, elem))
-                                {
-                                    elem.get_Parameter(TPolozhParamGuid).Set(value1);
-                                }
-                                if (Param.ParamExistByGuid(TNaznParamGuid, elem))
-                                {
-                                    elem.get_Parameter(TNaznParamGuid).Set(value1);
-                                }
+                            if (!UpdaterUtils.IsSkipFlagSet(elem, NTParamsNotSetParamGuid))
+                            {
+                                string value1 = GetTNazn(roomNaznValue, UpdaterUtils.GetStringSafe(elem.get_Parameter(BuiltInParameter.ROOM_NAME)));
+                                UpdaterUtils.TrySetString(UpdaterUtils.GetWritableParam(elem, TPolozhParamGuid), value1);
+                                UpdaterUtils.TrySetString(UpdaterUtils.GetWritableParam(elem, TNaznParamGuid), value1);
                             }
                         }
                     }
@@ -178,6 +188,8 @@ namespace TNovRooms
         }
         string GetTNazn(string Nazn, string Name)
         {
+            if (Nazn == null) Nazn = "";
+            if (Name == null) Name = "";
             string TNazn = "";
             if (Nazn.Contains("Жилое")) TNazn = Nazn;
             else if (Nazn.Contains("Технич"))
@@ -225,7 +237,7 @@ namespace TNovRooms
 
         public string GetUpdaterName()
         {
-            return "TNovRoomUpdater";
+            return UpdaterName;
         }
     }
 }

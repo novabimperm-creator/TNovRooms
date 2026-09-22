@@ -116,11 +116,7 @@ namespace TNovRooms
             {
                 new InfoWindow280("В проекте отсутствуют помещения с включенным параметром N_Квартира. Заполните его в спецификации.").ShowDialog();
                 Logger.Log( "Квартиры отсутствуют. Завершение работы.",3);
-                string commandText = @"https://portal.talan.group/knowledge/proektirovanie/kvartirografiya/";
-                var proc = new System.Diagnostics.Process();
-                proc.StartInfo.FileName = commandText;
-                proc.StartInfo.UseShellExecute = true;
-                proc.Start();
+                HelpLinks.ShowHelp("Квартирография");
                 return Result.Failed;
             }
             #endregion
@@ -258,11 +254,7 @@ namespace TNovRooms
                 {
                     new InfoWindow280("В проекте присутствуют помещения квартир с незаполненным параметром N_Кв.Номер. Запустите Нумератор квартир.").ShowDialog();
                     Logger.Log("Не у всех помещений с галочкой Квартира заполнен параметр Кв.Номер. Завершение работы.", 3);
-                    string commandText = @"https://portal.talan.group/knowledge/proektirovanie/kvartirografiya/";
-                    var proc = new System.Diagnostics.Process();
-                    proc.StartInfo.FileName = commandText;
-                    proc.StartInfo.UseShellExecute = true;
-                    proc.Start();
+                    HelpLinks.ShowHelp("Квартирография");
                     return Result.Failed;
                 }
             }

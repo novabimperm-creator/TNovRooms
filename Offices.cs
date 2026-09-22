@@ -97,11 +97,7 @@ namespace TNovRooms
                 new InfoWindow280("В проекте присутствуют неразмещенные или избыточные помещения в количестве " +
                     ec + " шт. Удалите их плагином или через спецификацию.").ShowDialog();
                 Logger.Log("В проекте присутствуют неразмещенные или избыточные помещения в количестве " +ec + " шт. Завершение работы",3);
-                string commandText = @"https://portal.talan.group/knowledge/proektirovanie/ofisografiya/";
-                var proc = new System.Diagnostics.Process();
-                proc.StartInfo.FileName = commandText;
-                proc.StartInfo.UseShellExecute = true;
-                proc.Start();
+                HelpLinks.ShowHelp("Офисография");
                 return Result.Failed;
             }
 
@@ -117,11 +113,7 @@ namespace TNovRooms
             {
                 new InfoWindow280("В проекте отсутствуют помещения с включенным параметром N_Офис.Номер. Заполните его в спецификации.").ShowDialog();
                 Logger.Log("Офисы отсутствуют. Завершение работы.", 3);
-                string commandText = @"https://portal.talan.group/knowledge/proektirovanie/ofisografiya/";
-                var proc = new System.Diagnostics.Process();
-                proc.StartInfo.FileName = commandText;
-                proc.StartInfo.UseShellExecute = true;
-                proc.Start();
+                HelpLinks.ShowHelp("Офисография");
                 return Result.Failed;
             }
             #endregion
