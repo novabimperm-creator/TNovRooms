@@ -13,7 +13,7 @@ namespace TNovRooms.Manager
     public static class FloorAreaParameterService
     {
         public const string SharedParameterFilePath =
-            @"\\fs-nova\NOVA\04_БИБЛИОТЕКА\BIM\_ФОП\ФОП Новация.txt";
+            TNovPaths.SharedParametersFile;
 
         public static bool EnsureBound(Document doc, Application app, out string error)
         {

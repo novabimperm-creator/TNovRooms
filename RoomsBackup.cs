@@ -152,7 +152,11 @@ namespace TNovRooms
                     this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.maxvalue.Text = rooms.Count.ToString()));
 
 
-                    try { 
+                    // Бэкап копится в памяти и пишется на сервер одним вызовом после цикла:
+                    // дозапись по строке на помещение — это сотни сетевых открытий файла.
+                    string filePath = config.ServerPath + "roomsBackup/"+ date + "," + docName + "," + backupName + ".txt";
+                    var backup = new System.Text.StringBuilder();
+                    try {
                         foreach (var room in rooms)
                         {
 #if R2022
@@ -191,9 +195,8 @@ namespace TNovRooms
                             Logger.Log("   площадь округл: " + roomSqRStr, 2);
 
                             //запись в бэкап
-                            string filePath = config.ServerPath + "roomsBackup/"+ date + "," + docName + "," + backupName + ".txt";
-                            File.AppendAllText(filePath, roomType + "|" + idint.ToString() + "|" + roomSqStr + "|" + roomSqRStr+"\n");
-                            Logger.Log("   записано в бэкап", 2);
+                            backup.Append(roomType + "|" + idint.ToString() + "|" + roomSqStr + "|" + roomSqRStr+"\n");
+                            Logger.Log("   добавлено в бэкап", 2);
 
                             //Прогресс-бар: +1
                             PBCount++;
@@ -201,6 +204,8 @@ namespace TNovRooms
                             this.apartsProgressBar.TNov_ProgressBar.Dispatcher.Invoke<string>((Func<string>)(() => this.apartsProgressBar.value.Text = PBCount.ToString()));
 
                         }
+                        File.AppendAllText(filePath, backup.ToString());
+                        Logger.Log("Бэкап записан: " + filePath, 2);
                     }
                     catch (Exception ex)
                     {
